@@ -1,0 +1,11 @@
+{
+  "ExpandedNodes": [
+    "",
+    "\\LyncBot.Core",
+    "\\LyncBot.Core\\Dialogs",
+    "\\LyncBot.Core\\LuisModel",
+    "\\LyncBot.Core\\Lync"
+  ],
+  "SelectedNode": "\\LyncBot.Core\\Lync\\LyncClientManager.cs",
+  "PreviewInSolutionExplorer": false
+}
