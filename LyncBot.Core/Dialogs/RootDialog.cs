@@ -7,27 +7,112 @@
     using Microsoft.Bot.Builder.Dialogs;
     using Microsoft.Bot.Connector;
 
+
+    using System.Configuration;
+
+    using System.Globalization;
+
+    using System.Linq;
+
+    using System.Net.Http;
+
+    using System.Net.Http.Headers;
+
+    using System.Text;
+
+    using System.Text.RegularExpressions;
+
+     using Microsoft.Bot.Builder.FormFlow;
+
+    using Microsoft.Bot.Builder.Luis.Models;
+
+
+    using Microsoft.Lync.Model.Conversation;
+
+    using Newtonsoft.Json;
+
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+
+        static Random rnd = new Random();
+
+        private int unknownUtteranceCount = 0;
+
+        private int promptCount = 0;
+
+        private static List<string> yesStrings = new List<string> { "ya", "yes", "y", "yea", "yeah", "yess", "ok", "correct", "Yes", "YES" };
+
+        private static List<string> noStrings = new List<string> { "no", "n", "wrong", "stop", "cancel", "noo", "abort", "No", "NO" };
+
+        static List<string> cliamNoPrompts = new List<string> { "Invalid claim number! please enter a valid claim number.", "Thats not a valid claim number! try to give again.", "Sorry, its not a valid claim number! please provide a valid number.", "Oops, its not a claim number. Enter a valid number to proceed." };
+
+        static List<string> cliamNoLastPrompt = new List<string> { "Oops, I didn't understand that. Please ask something else :)", "Again a wrong claim number. Please proceed with any other queries!", "I didn't get that. Your request has been failed. Try to ask your queries again!", "Oops! too many attempts, please ask your queries again!" };
+
+        static List<string> UnknownUtterances = new List<string> { "Very sorry, I didn't get that!", "I'm unable to understand your question. Please ask 'help'.", "I didn't get you, try to ask your queries again!", "Sorry, I am not aware of this!" };
+
+        static List<string> greetingsFirstVisit =
+
+            new List<string> { CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Hey! @name, good morning.\nHow may I assist you today?" : "Hey! @name, good afternoon.\nHow may I assist you today?",
+
+              CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Good morning! @name\nI'm Diana, an  chatbot. Tell me what are you looking for?" : "Good afternoon! @name\nI'm Diana,  chatbot. Tell me what are you looking for?",
+
+            "Hi @name, I'm Diana, Field Support Robotic Assistant \nHow can I help you today?",
+
+            "Hey! @name, Hope you are doing well. \nHow may I assist you?"};
+
+        static List<string> greetingsNextVisits =
+
+            new List<string>() { "Hey! @name, welcome back. Hope you are doing well.\nHow can I assist you?",
+
+                 CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Hi @name!, good morning." : "Hi @name!, good afternoon."+"\nTell me how can I help you?",
+
+            CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Welcome back @name! a very good morning." : "Welcome back @name! a very good afternoon."+"How may I help you?",
+
+            CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Good morning" : "Good afternoon"+" @name, nice to see you again!\nTell me how can I assis you today?"};
+
+        protected string userMsg = String.Empty;
+
+        private static int count = 0;
+
+        private static int ApiCallCount = 0;
+
+        protected string lastIntent = String.Empty;
+
+        protected int visitCount = 1;
+
+       
+
+        Dictionary<string, string> calenderMonths = new Dictionary<string, string> { { "jan", "january" }, { "feb", "february" }, { "mar", "march" }, { "apr", "april" }, { "may", "may" }, { "jun", "june" }, { "jul", "july" }, { "aug", "august" }, { "sep", "september" }, { "oct", "october" }, { "nov", "november" }, { "dec", "december" } };
+
+
+
         private PresenceService _presenceService;
 
         //public RootDialog(PresenceService presenceService)
         //{
         //    _presenceService = presenceService;
         //}
-        private const string FlightsOption = "Flights";
+        private const string TicketStatusOption = "Check Existing Ticket Status";
 
-        private const string HotelsOption = "Hotels";
+        private const string TechnicalIssueOption = "Get Help with technical issue";
 
         public async Task StartAsync(IDialogContext context)
         {
+           
             context.Wait(this.MessageReceivedAsync);
         }
 
         public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
             var message = await result;
+            var activity = await result as Activity;
+
+            userMsg = activity.Text;
+
+            string userName = GetName(activity.From).Replace(",", "");
+
+            await context.PostAsync(greetingsFirstVisit[rnd.Next(0, greetingsFirstVisit.Count - 1)].Replace("@name", userName));
 
             if (message.Text.ToLower().Contains("help") || message.Text.ToLower().Contains("support") || message.Text.ToLower().Contains("problem"))
             {
@@ -41,7 +126,7 @@
 
         private void ShowOptions(IDialogContext context)
         {
-            PromptDialog.Choice(context, this.OnOptionSelected, new List<string>() { FlightsOption, HotelsOption }, "Are you looking for a flight or a hotel?", "Not a valid option", 3);
+            PromptDialog.Choice(context, this.OnOptionSelected, new List<string>() { TicketStatusOption, TechnicalIssueOption }, "Please choose below ..", "Not a valid option", 3);
         }
 
         private async Task OnOptionSelected(IDialogContext context, IAwaitable<string> result)
@@ -53,7 +138,10 @@
                 switch (optionSelected)
                 {
                     
-                    case HotelsOption:
+                    case TechnicalIssueOption:
+                        context.Call(new HotelsDialog(), this.ResumeAfterOptionDialog);
+                        break;
+                    case TicketStatusOption:
                         context.Call(new HotelsDialog(), this.ResumeAfterOptionDialog);
                         break;
                 }
@@ -89,5 +177,79 @@
                 context.Wait(this.MessageReceivedAsync);
             }
         }
+        public static string GetName(ChannelAccount from)
+
+        {
+
+            string name = string.Empty;
+
+            if (string.IsNullOrEmpty(from.Name))
+
+                return name;
+
+
+
+            var res = from.Name.Split(' ');
+
+            if (res.Length > 1)
+
+            {
+
+                return res[1];
+
+            }
+
+            else
+
+            {
+
+                return res[0];
+
+            }
+
+        }
+
+
+
+        public static DateTime CurrentDateTime(string TimeZone)
+
+        {
+
+            DateTime datetimeUTC = DateTime.UtcNow;
+
+            string timezoneId = string.Empty;
+
+            switch (TimeZone)
+
+            {
+
+                case "IST":
+
+                    timezoneId = "India Standard Time";
+
+                    break;
+
+                case "EST":
+
+                    timezoneId = "Eastern Standard Time";
+
+                    break;
+
+                case "CST":
+
+                    timezoneId = "Central Standard Time";
+
+                    break;
+
+                case "GMT":
+
+                    return datetimeUTC;
+
+            }
+
+            return TimeZoneInfo.ConvertTimeFromUtc(datetimeUTC, TimeZoneInfo.FindSystemTimeZoneById(timezoneId));
+
+        }
+
     }
 }
