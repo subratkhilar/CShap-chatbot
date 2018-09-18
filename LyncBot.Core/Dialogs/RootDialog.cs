@@ -139,10 +139,10 @@
                 {
                     
                     case TechnicalIssueOption:
-                        context.Call(new HotelsDialog(), this.ResumeAfterOptionDialog);
+                        context.Call(new TechnialIssueDialog(), this.ResumeAfterOptionDialog);
                         break;
                     case TicketStatusOption:
-                        context.Call(new HotelsDialog(), this.ResumeAfterOptionDialog);
+                        context.Call(new TechnialIssueDialog(), this.ResumeAfterOptionDialog);
                         break;
                 }
             }

@@ -106,12 +106,11 @@
   <ItemGroup>
     <Compile Include="BotToUserLync.cs" />
     <Compile Include="Dialogs\LyncLuisDialog.cs" />
-    <Compile Include="Dialogs\Hotel.cs" />
-    <Compile Include="Dialogs\HotelsDialog.cs" />
-    <Compile Include="Dialogs\HotelsQuery.cs" />
+    <Compile Include="Dialogs\TechnicalIssue.cs" />
+    <Compile Include="Dialogs\TechnialIssueDialog.cs" />
+    <Compile Include="Dialogs\TechnicalIssueQuery.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
     <Compile Include="Dialogs\SupportDialog.cs" />
-    
     <Compile Include="Extension.cs" />
     <Compile Include="Lync\ConversationService.cs" />
     <Compile Include="Lync\LyncClientManager.cs" />
