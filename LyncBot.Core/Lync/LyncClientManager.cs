@@ -116,7 +116,7 @@ namespace LyncBot.Core
                // DialogModule_MakeRoot.Register
                   //  (scope, () => new Dialogs.LyncLuisDialog(scope.Resolve<PresenceService>()));
                   DialogModule_MakeRoot.Register
-                    (scope, () => new Dialogs.TechnialIssueDialog());
+                    (scope, () => new Dialogs.RootDialog());
                 var postToBot = scope.Resolve<IPostToBot>();
                 await postToBot.PostAsync(activity, CancellationToken.None);
             }

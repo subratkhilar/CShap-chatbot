@@ -109,12 +109,8 @@
     <Compile Include="Dialogs\CoreDialogs.cs" />
     <Compile Include="Dialogs\LyncLuisDialog.cs" />
     <Compile Include="Dialogs\NameDialog.cs" />
-    <Compile Include="Dialogs\TechnicalIssue.cs" />
-    <Compile Include="Dialogs\TechnialIssueDialog.cs" />
-    <Compile Include="Dialogs\TechnicalIssueQuery.cs" />
     <Compile Include="Dialogs\RootDialog.cs" />
-    <Compile Include="Dialogs\SupportDialog.cs" />
-	<Compile Include="Extension.cs" />
+    <Compile Include="Extension.cs" />
     <Compile Include="Lync\ConversationService.cs" />
     <Compile Include="Lync\LyncClientManager.cs" />
     <Compile Include="Lync\PresenceService.cs" />

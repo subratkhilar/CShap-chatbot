@@ -100,10 +100,7 @@ namespace LyncBot.Core.Dialogs
 
             }
 
-                if (message.Text.ToLower().Contains("help") || message.Text.ToLower().Contains("support") || message.Text.ToLower().Contains("problem"))
-            {
-                await context.Forward(new SupportDialog(), this.ResumeAfterSupportDialog, message, CancellationToken.None);
-            }
+            
 
         }
         private async Task ResumeAfterSupportDialog(IDialogContext context, IAwaitable<int> result)

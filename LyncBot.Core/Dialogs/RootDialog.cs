@@ -120,7 +120,7 @@
         private async Task SendWelcomeMessageAsync(IDialogContext context)
         {
             await context.PostAsync("Hi,You have reached Field Support..");
-            await context.PostAsync("Thanks so much for reaching out ! Whats bring you to @fssupport today?");
+           // await context.PostAsync("Thanks so much for reaching out ! Whats bring you to @fssupport today?");
 
             context.Call(new NameDialog(), this.NameDialogResumeAfter);
         }
