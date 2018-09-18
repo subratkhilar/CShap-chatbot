@@ -97,60 +97,66 @@
 
         private const string TechnicalIssueOption = "Get Help with technical issue";
 
+
+        private string name;
+        private int age;
+
         public async Task StartAsync(IDialogContext context)
         {
-           
+            /* Wait until the first message is received from the conversation and call MessageReceviedAsync 
+             *  to process that message. */
             context.Wait(this.MessageReceivedAsync);
         }
 
-        public virtual async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
+        private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
         {
+            /* When MessageReceivedAsync is called, it's passed an IAwaitable<IMessageActivity>. To get the message,
+             *  await the result. */
             var message = await result;
-            var activity = await result as Activity;
 
-            userMsg = activity.Text;
-
-            string userName = GetName(activity.From).Replace(",", "");
-
-            await context.PostAsync(greetingsFirstVisit[rnd.Next(0, greetingsFirstVisit.Count - 1)].Replace("@name", userName));
-
-            if (message.Text.ToLower().Contains("help") || message.Text.ToLower().Contains("support") || message.Text.ToLower().Contains("problem"))
-            {
-                await context.Forward(new SupportDialog(), this.ResumeAfterSupportDialog, message, CancellationToken.None);
-            }
-            else
-            {
-                this.ShowOptions(context);
-            }
+            await this.SendWelcomeMessageAsync(context);
         }
 
-        private void ShowOptions(IDialogContext context)
+        private async Task SendWelcomeMessageAsync(IDialogContext context)
         {
-            PromptDialog.Choice(context, this.OnOptionSelected, new List<string>() { TicketStatusOption, TechnicalIssueOption }, "Please choose below ..", "Not a valid option", 3);
+            await context.PostAsync("Hi,You have reached Field Support..");
+            await context.PostAsync("Thanks so much for reaching out ! Whats bring you to @fssupport today?");
+
+            context.Call(new NameDialog(), this.NameDialogResumeAfter);
         }
 
-        private async Task OnOptionSelected(IDialogContext context, IAwaitable<string> result)
+        private async Task NameDialogResumeAfter(IDialogContext context, IAwaitable<string> result)
         {
             try
             {
-                string optionSelected = await result;
+                this.name = await result;
 
-                switch (optionSelected)
-                {
-                    
-                    case TechnicalIssueOption:
-                        context.Call(new TechnialIssueDialog(), this.ResumeAfterOptionDialog);
-                        break;
-                    case TicketStatusOption:
-                        context.Call(new TechnialIssueDialog(), this.ResumeAfterOptionDialog);
-                        break;
-                }
+                context.Call(new AgeDialog(this.name), this.AgeDialogResumeAfter);
             }
-            catch (TooManyAttemptsException ex)
+            catch (TooManyAttemptsException)
             {
-                await context.PostAsync($"Ooops! Too many attempts :(. But don't worry, I'm handling that exception and you can try again!");
+                await context.PostAsync("I'm sorry, I'm having issues understanding you. Let's try again.");
 
-                context.Wait(this.MessageReceivedAsync);
+                await this.SendWelcomeMessageAsync(context);
+            }
+        }
+
+        private async Task AgeDialogResumeAfter(IDialogContext context, IAwaitable<int> result)
+        {
+            try
+            {
+                this.age = await result;
+
+                await context.PostAsync($"Your name is { name } and your age is { age }.");
+
+            }
+            catch (TooManyAttemptsException)
+            {
+                await context.PostAsync("I'm sorry, I'm having issues understanding you. Let's try again.");
+            }
+            finally
+            {
+                await this.SendWelcomeMessageAsync(context);
             }
         }
 
