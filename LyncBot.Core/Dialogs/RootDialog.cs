@@ -34,12 +34,12 @@
     [Serializable]
     public class RootDialog : IDialog<object>
     {
+        private const string SoftwareOption = "Software issue";
+
+        private const string HardwareOption = "Hardware issue";
 
         static Random rnd = new Random();
-
-        private int unknownUtteranceCount = 0;
-
-        private int promptCount = 0;
+        
 
         private static List<string> yesStrings = new List<string> { "ya", "yes", "y", "yea", "yeah", "yess", "ok", "correct", "Yes", "YES" };
 
@@ -116,10 +116,36 @@
             string userName = GetName(activity.From).Replace(",", "");
 
             await context.PostAsync(greetingsFirstVisit[rnd.Next(0, greetingsFirstVisit.Count - 1)].Replace("@name", userName));
-            
+            PromptDialog.Choice(context, this.OnOptionSelected, new List<string>() { SoftwareOption, HardwareOption }, "please choose from below..?", "Not a valid option", 3);
 
-            context.Call(new NameDialog(), this.NameDialogResumeAfter);
+           // context.Call(new NameDialog(), this.NameDialogResumeAfter);
         }
+        private async Task OnOptionSelected(IDialogContext context, IAwaitable<string> result)
+        {
+            try
+            {
+                string optionSelected = await result;
+
+                switch (optionSelected)
+                {
+                    case SoftwareOption:
+                        context.Call(new NameDialog(), this.NameDialogResumeAfter);
+                        break;
+
+                    case HardwareOption:
+                        context.Call(new NameDialog(), this.NameDialogResumeAfter);
+                        break;
+                }
+            }
+            catch (TooManyAttemptsException ex)
+            {
+                await context.PostAsync($"Ooops! Too many attempts :(. But don't worry, I'm handling that exception and you can try again!");
+
+                context.Wait(this.MessageReceivedAsync);
+            }
+        }
+
+
 
         private async Task NameDialogResumeAfter(IDialogContext context, IAwaitable<string> result)
         {
