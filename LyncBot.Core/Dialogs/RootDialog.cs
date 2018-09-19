@@ -53,9 +53,9 @@
 
         static List<string> greetingsFirstVisit =
 
-            new List<string> { CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Hey! @name, good morning.\nHow may I assist you today?" : "Hey! @name, good afternoon.\nHow may I assist you today?",
+            new List<string> { CurrentDateTime("IST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Hey! @name, good morning.\nI'm Diana, Field Support Robotic Assistant \nThanks so much for reaching out ! Whats bring you to @fssupport today?" : "Hey! @name, good afternoon.\nI'm Diana, Field Support Robotic Assistant \nThanks so much for reaching out ! Whats bring you to @fssupport today?",
 
-              CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Good morning! @name\nI'm Diana, an  chatbot. Tell me what are you looking for?" : "Good afternoon! @name\nI'm Diana,  chatbot. Tell me what are you looking for?",
+              CurrentDateTime("IST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Good morning! @name\nI'm Diana, Field Support Robotic Assistant \nThanks so much for reaching out ! Whats bring you to @fssupport today?" : "Good afternoon! @name\nI'm Diana, Field Support Robotic Assistant \nThanks so much for reaching out ! Whats bring you to @fssupport today?",
 
             "Hi @name, I'm Diana, Field Support Robotic Assistant \nThanks so much for reaching out ! Whats bring you to @fssupport today?",
 
@@ -98,9 +98,9 @@
         private const string TechnicalIssueOption = "Get Help with technical issue";
 
 
-        private string name;
+        private string issueType;
         private string query;
-
+        private string osType;
         public async Task StartAsync(IDialogContext context)
         {
             /* Wait until the first message is received from the conversation and call MessageReceviedAsync 
@@ -132,9 +132,10 @@
         {
             try
             {
-                this.name = await result;
+                this.issueType = await result;
+                context.Call(new OSDialogs(this.issueType), this.OSDialogResumeAfter);
 
-                context.Call(new AgeDialog(this.name), this.AgeDialogResumeAfter);
+                // context.Call(new TechnicalIssueDialog(this.name), this.AgeDialogResumeAfter);
             }
             catch (TooManyAttemptsException)
             {
@@ -144,14 +145,14 @@
             }
         }
 
-        private async Task AgeDialogResumeAfter(IDialogContext context, IAwaitable<string> result)
+        private async Task OSDialogResumeAfter(IDialogContext context, IAwaitable<string> result)
         {
             try
             {
-                this.query = await result;
+                this.osType = await result;
 
-                await context.PostAsync($"Your message { query } was registered. Once we resolve it; we will get back to you.");
-                await context.PostAsync($"Thanks for contacting our support team");
+                context.Call(new TechnicalIssueDialog(this.issueType,this.osType), this.IssueDialogResumeAfter);
+
 
             }
             catch (TooManyAttemptsException)
@@ -160,7 +161,30 @@
             }
             finally
             {
-               await this.SendWelcomeMessageAsync(context, result);
+                //  await this.SendWelcomeMessageAsync(context, result);
+            }
+        }
+
+        private async Task IssueDialogResumeAfter(IDialogContext context, IAwaitable<string> result)
+        {
+            try
+            {
+                this.query = await result;
+
+                await context.PostAsync($"Your message { query } was registered. Once we resolve it; we will get back to you.");
+                await context.PostAsync($"Thanks for contacting our support team");
+                System.Console.WriteLine(" query >>"+ query +"os type"+osType +"issue type >>"+issueType);
+                //rest call for service now ticket creation begin 
+
+                //rest call end
+            }
+            catch (TooManyAttemptsException)
+            {
+                await context.PostAsync("I'm sorry, I'm having issues understanding you. Let's try again.");
+            }
+            finally
+            {
+             //  await this.SendWelcomeMessageAsync(context, result);
             }
         }
 

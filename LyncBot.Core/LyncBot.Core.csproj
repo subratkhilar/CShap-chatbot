@@ -105,7 +105,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BotToUserLync.cs" />
-    <Compile Include="Dialogs\AgeDialog.cs" />
+    <Compile Include="Dialogs\OSDialogs.cs" />
+    <Compile Include="Dialogs\TechnicalIssueDialog.cs" />
     <Compile Include="Dialogs\CoreDialogs.cs" />
     <Compile Include="Dialogs\LyncLuisDialog.cs" />
     <Compile Include="Dialogs\NameDialog.cs" />
