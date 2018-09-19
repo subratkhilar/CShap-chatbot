@@ -116,7 +116,7 @@
             string userName = GetName(activity.From).Replace(",", "");
 
             await context.PostAsync(greetingsFirstVisit[rnd.Next(0, greetingsFirstVisit.Count - 1)].Replace("@name", userName));
-            await context.PostAsync("Thanks so much for reaching out ! Whats bring you to @fssupport today?");
+            
 
             context.Call(new NameDialog(), this.NameDialogResumeAfter);
         }
