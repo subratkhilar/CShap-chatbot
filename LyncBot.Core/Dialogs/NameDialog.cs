@@ -12,7 +12,7 @@
 
         public async Task StartAsync(IDialogContext context)
         {
-            await context.PostAsync("Do You have Software or Hardware issue");
+            await context.PostAsync("Do You have Software/Hardware issue?");
 
             context.Wait(this.MessageReceivedAsync);
         }

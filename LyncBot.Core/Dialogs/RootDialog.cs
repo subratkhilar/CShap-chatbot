@@ -90,9 +90,9 @@
       
 
 
-        private string issueType;
-        private string query;
-        private string osType;
+        public string issueType;
+        public string query;
+        public string osType;
         public  Task StartAsync(IDialogContext context)
         {
             /* Wait until the first message is received from the conversation and call MessageReceviedAsync 
@@ -116,9 +116,9 @@
             string userName = GetName(activity.From).Replace(",", "");
 
             await context.PostAsync(greetingsFirstVisit[rnd.Next(0, greetingsFirstVisit.Count - 1)].Replace("@name", userName));
-            PromptDialog.Choice(context, this.OnOptionSelected, new List<string>() { SoftwareOption, HardwareOption }, "please choose from below..?", "Not a valid option", 3);
+           // PromptDialog.Choice(context, this.OnOptionSelected, new List<string>() { SoftwareOption, HardwareOption }, "please choose from below..?", "Not a valid option", 3);
 
-           // context.Call(new NameDialog(), this.NameDialogResumeAfter);
+            context.Call(new NameDialog(), this.NameDialogResumeAfter);
         }
         private async Task OnOptionSelected(IDialogContext context, IAwaitable<string> result)
         {
@@ -194,7 +194,7 @@
                 await context.PostAsync($"Thanks for contacting our support team");
                 System.Console.WriteLine(" query >>"+ query +"os type"+osType +"issue type >>"+issueType);
                 //rest call for service now ticket creation begin 
-
+                CalltoAPI("", query);
                 //rest call end
             }
             catch (TooManyAttemptsException)
@@ -306,8 +306,7 @@
 
 
 
-        private static async Task<string> CalltoAPI(string URL)
-
+        private static async Task<string> CalltoAPI(string URL,string query)
         {
 
             string response = String.Empty;
@@ -319,33 +318,24 @@
                 client.DefaultRequestHeaders.Accept.Add(
 
                 new MediaTypeWithQualityHeaderValue("application/json"));
-
-
-
+                ServiceRequest aServReq = new ServiceRequest { shortDesc = "Software-change", description = query };
+                client.BaseAddress = new Uri("http://localhost:3019/");
+                //var response = client.PostAsJsonAsync("api/person", ).Result;
+               
                 HttpResponseMessage msg = null;
 
                 try
 
                 {
 
-                    msg = await client.GetAsync(URL);
+                    msg = client.PutAsJsonAsync("/api/v1/incident", aServReq).Result; 
 
                 }
 
                 catch (Exception ex)
-
                 {
 
-                    if (ApiCallCount < 2)
-
-                    {
-
-                        msg = await client.GetAsync(URL);
-
-                    }
-
-                    ApiCallCount++;
-
+                    
                 }
 
                 if (msg.IsSuccessStatusCode)
@@ -378,5 +368,17 @@
 
         }
 
+        public class ServiceRequest
+        {
+            public string shortDesc { get; set; }
+            public string description { get; set; }
+            public string category { get; set; }
+
+            public string short_description { get; set; }
+            public string contact_type { get; set; }
+            public string email { get; set; }
+            public string assignment_group { get; set; }
+            public string caller_id { get; set; }
+        }
     }
 }
