@@ -6,7 +6,7 @@
     using Microsoft.Bot.Connector;
 
     [Serializable]
-    public class AgeDialog : IDialog<int>
+    public class AgeDialog : IDialog<string>
     {
         private string name;
         private int attempts = 3;
@@ -27,14 +27,15 @@
         {
             var message = await result;
 
-         
+            String  query;
 
             /* If the message returned is a valid name, return it to the calling dialog. */
             if ((message.Text != null) && (message.Text.Trim().Length > 0))
             {
                 /* Completes the dialog, removes it from the dialog stack, and returns the result to the parent/calling
                     dialog. */
-                context.Done(message.Text);
+                query = message.Text;
+                context.Done(query);
             }
             /* Else, try again by re-prompting the user. */
             else

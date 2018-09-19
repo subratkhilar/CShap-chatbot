@@ -57,7 +57,7 @@
 
               CurrentDateTime("CST").ToString("tt", System.Globalization.CultureInfo.InvariantCulture).ToLower() == "am" ? "Good morning! @name\nI'm Diana, an  chatbot. Tell me what are you looking for?" : "Good afternoon! @name\nI'm Diana,  chatbot. Tell me what are you looking for?",
 
-            "Hi @name, I'm Diana, Field Support Robotic Assistant \nHow can I help you today?",
+            "Hi @name, I'm Diana, Field Support Robotic Assistant \nThanks so much for reaching out ! Whats bring you to @fssupport today?",
 
             "Hey! @name, Hope you are doing well. \nHow may I assist you?"};
 
@@ -99,7 +99,7 @@
 
 
         private string name;
-        private int age;
+        private string query;
 
         public async Task StartAsync(IDialogContext context)
         {
@@ -114,13 +114,16 @@
              *  await the result. */
             var message = await result;
 
-            await this.SendWelcomeMessageAsync(context);
+            await this.SendWelcomeMessageAsync(context, result);
         }
 
-        private async Task SendWelcomeMessageAsync(IDialogContext context)
+        private async Task SendWelcomeMessageAsync(IDialogContext context, IAwaitable<object> result)
         {
-            await context.PostAsync("Hi,You have reached Field Support..");
-           // await context.PostAsync("Thanks so much for reaching out ! Whats bring you to @fssupport today?");
+            var activity = await result as Activity;
+            string userName = GetName(activity.From).Replace(",", "");
+
+            await context.PostAsync(greetingsFirstVisit[rnd.Next(0, greetingsFirstVisit.Count - 1)].Replace("@name", userName));
+            await context.PostAsync("Thanks so much for reaching out ! Whats bring you to @fssupport today?");
 
             context.Call(new NameDialog(), this.NameDialogResumeAfter);
         }
@@ -137,17 +140,18 @@
             {
                 await context.PostAsync("I'm sorry, I'm having issues understanding you. Let's try again.");
 
-                await this.SendWelcomeMessageAsync(context);
+                await this.SendWelcomeMessageAsync(context, result);
             }
         }
 
-        private async Task AgeDialogResumeAfter(IDialogContext context, IAwaitable<int> result)
+        private async Task AgeDialogResumeAfter(IDialogContext context, IAwaitable<string> result)
         {
             try
             {
-                this.age = await result;
+                this.query = await result;
 
-                await context.PostAsync($"Your name is { name } and your age is { age }.");
+                await context.PostAsync($"Your message { query } was registered. Once we resolve it; we will get back to you.");
+                await context.PostAsync($"Thanks for contacting our support team");
 
             }
             catch (TooManyAttemptsException)
@@ -156,7 +160,7 @@
             }
             finally
             {
-                await this.SendWelcomeMessageAsync(context);
+               await this.SendWelcomeMessageAsync(context, result);
             }
         }
 
