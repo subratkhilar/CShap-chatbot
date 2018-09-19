@@ -87,25 +87,18 @@
 
 
 
-        private PresenceService _presenceService;
-
-        //public RootDialog(PresenceService presenceService)
-        //{
-        //    _presenceService = presenceService;
-        //}
-        private const string TicketStatusOption = "Check Existing Ticket Status";
-
-        private const string TechnicalIssueOption = "Get Help with technical issue";
+      
 
 
         private string issueType;
         private string query;
         private string osType;
-        public async Task StartAsync(IDialogContext context)
+        public  Task StartAsync(IDialogContext context)
         {
             /* Wait until the first message is received from the conversation and call MessageReceviedAsync 
              *  to process that message. */
             context.Wait(this.MessageReceivedAsync);
+            return Task.CompletedTask;
         }
 
         private async Task MessageReceivedAsync(IDialogContext context, IAwaitable<IMessageActivity> result)
@@ -184,7 +177,8 @@
             }
             finally
             {
-             //  await this.SendWelcomeMessageAsync(context, result);
+                //  await this.SendWelcomeMessageAsync(context, result);
+                context.Wait(this.MessageReceivedAsync);
             }
         }
 
@@ -246,7 +240,6 @@
 
 
         public static DateTime CurrentDateTime(string TimeZone)
-
         {
 
             DateTime datetimeUTC = DateTime.UtcNow;
@@ -282,6 +275,80 @@
             }
 
             return TimeZoneInfo.ConvertTimeFromUtc(datetimeUTC, TimeZoneInfo.FindSystemTimeZoneById(timezoneId));
+
+        }
+
+
+
+        private static async Task<string> CalltoAPI(string URL)
+
+        {
+
+            string response = String.Empty;
+
+            using (HttpClient client = new HttpClient(new HttpClientHandler() { UseDefaultCredentials = true }))
+
+            {
+
+                client.DefaultRequestHeaders.Accept.Add(
+
+                new MediaTypeWithQualityHeaderValue("application/json"));
+
+
+
+                HttpResponseMessage msg = null;
+
+                try
+
+                {
+
+                    msg = await client.GetAsync(URL);
+
+                }
+
+                catch (Exception ex)
+
+                {
+
+                    if (ApiCallCount < 2)
+
+                    {
+
+                        msg = await client.GetAsync(URL);
+
+                    }
+
+                    ApiCallCount++;
+
+                }
+
+                if (msg.IsSuccessStatusCode)
+
+                {
+
+                    try
+
+                    {
+
+                        response = await msg.Content.ReadAsStringAsync();
+
+
+
+                    }
+
+                    catch (Exception ex)
+
+                    {
+
+                        throw ex;
+
+                    }
+
+                }
+
+            }
+
+            return response;
 
         }
 
